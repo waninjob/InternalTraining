@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      let svg;
+      window.onload=function(){
+        svg=document.getElementById("svg");
+        canvas(svg.getAttribute("width"),svg.getAttribute("height"));
+        main3();
+      }      
+      function main3(){
+        //旋轉，轉到目標角度停止(尋最小角度為旋轉方向)
+        let pos=[100,100];//基本線的x、y位置
+        let line=drawLine(0,0,100,100,"red",5);
+        let updateLine=drawLine(0,0,100,100,"green",5);
+        let deg=180/Math.PI*Math.atan2(pos[1],pos[0]);
+	let tmpDeg=deg;
+	let targetDeg=deg;
+
+        let clickPos=[0,0];
+        svg.addEventListener("click",(e)=>{
+          tmpDeg=deg;
+          x=e.x-320;
+          y=e.y-240;
+          clickPos=[x,y];
+
+          let rad=Math.atan2(clickPos[1],clickPos[0]);
+          targetDeg=180/Math.PI*rad;
+        });
+
+        setInterval(() => {
+          //deg=targetDeg;
+	  //角度
+          if(targetDeg-deg>0){
+            tmpDeg=tmpDeg+0.1 > targetDeg? targetDeg:tmpDeg+0.1;
+          }else{
+            tmpDeg=tmpDeg-0.1 < targetDeg? targetDeg:tmpDeg-0.1;
+          }
+          //弧度
+          let rad=Math.PI/180*(tmpDeg-deg);
+          //轉換
+          let trans=[
+            Math.cos(rad) , -Math.sin(rad),
+            Math.sin(rad),  Math.cos(rad)
+          ];
+
+          let newpos=[
+            trans[0]*pos[0]+trans[1]*pos[1],
+            trans[2]*pos[0]+trans[3]*pos[1],
+          ]
+          drawNewLine(updateLine,0,0,newpos[0],newpos[1],"green",5);
+        }, 60/1000);
+      }
+      function main2(){
+        //旋轉，轉到目標角度停止(逆時針旋)
+        let pos=[100,0];//基本線的x、y位置
+        let line=drawLine(0,0,100,0,"red",5);
+        let updateLine=drawLine(0,0,100,0,"green",5);
+        let deg=0;
+        let targetDeg=0;
+
+        let clickPos=[0,0];
+        svg.addEventListener("click",(e)=>{
+          deg=0;
+          x=e.x-320;
+          y=e.y-240;
+          clickPos=[x,y];
+
+          let rad=Math.atan2(clickPos[1],clickPos[0]);
+          targetDeg=(180/Math.PI*rad+360)%360;
+          // alert(targetDeg);
+        });
+
+        setInterval(() => {
+          //角度
+          deg=deg+0.1 > targetDeg? targetDeg:deg+0.1;
+          //弧度
+          let rad=Math.PI/180*deg;
+          //轉換
+          let trans=[
+            Math.cos(rad) , -Math.sin(rad),
+            Math.sin(rad),  Math.cos(rad)
+          ];
+
+          let newpos=[
+            trans[0]*pos[0]+trans[1]*pos[1],
+            trans[2]*pos[0]+trans[3]*pos[1],
+          ]
+          drawNewLine(updateLine,0,0,newpos[0],newpos[1],"green",5);
+        }, 60/1000);
+      }
+      function main1(){
+        //旋轉，每次多0.1
+        svg.addEventListener("click",(e)=>{
+          x=e.x-320;
+          y=e.y-240;
+        });
+
+        let pos=[100,0];//基本線的x、y位置
+        let line=drawLine(0,0,100,0,"red",5);
+        let newLine=drawLine(0,0,100,0,"green",5);
+
+
+        let deg=0;
+        setInterval(() => {
+          //角度
+          deg=deg+0.1;
+          //弧度
+          let rad=Math.PI/180*deg;
+          //轉換
+          let trans=[
+            Math.cos(rad) , -Math.sin(rad),
+            Math.sin(rad),  Math.cos(rad)
+          ];
+
+          let newpos=[
+            trans[0]*pos[0]+trans[1]*pos[1],
+            trans[2]*pos[0]+trans[3]*pos[1],
+          ]
+          drawNewLine(newLine,0,0,newpos[0],newpos[1],"green",5);
+        }, 60/1000);
+      }
+      function canvas(w,h){
+        //直線
+        for(let i=0;i<=w;i=i+10){
+          drawLine(i,0,i,h,"#dddddd",1);
+        }
+        //橫線
+        for(let i=0;i<=h;i=i+10){
+          drawLine(0,i,w,i,"#dddddd",1);
+        }
+      }
+      function drawLine(x1,y1,x2,y2,color,w){
+        let line=document.createElementNS("http://www.w3.org/2000/svg","line");
+          line.setAttribute("x1",x1+320);
+          line.setAttribute("y1",y1+240);
+          line.setAttribute("x2",x2+320);
+          line.setAttribute("y2",y2+240);
+          line.setAttribute("stroke",color);
+          line.setAttribute("stroke-width",w);
+          svg.appendChild(line);
+          return line;
+      }
+      function drawNewLine(line,x1,y1,x2,y2,color,w){
+          line.setAttribute("x1",x1+320);
+          line.setAttribute("y1",y1+240);
+          line.setAttribute("x2",x2+320);
+          line.setAttribute("y2",y2+240);        
+      }
+    </script>
+  </head>
+  <body style="margin:0px">
+    <svg id="svg" width="640" height="480" style="border:0px solid #000000;"></svg>
+  </body>
+</html>
