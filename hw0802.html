@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      let svg;
+      let width;
+      let height;
+      window.onload=function(){
+        svg=document.getElementById("svg");
+        width=svg.getAttribute("width");
+        height=svg.getAttribute("height");
+        canvas();
+        main3();
+        // main2()//從原點到click處畫一條直線
+        // main1();//每一frame 順時針旋轉
+      } 
+      function main3(){
+        //R:基準線
+        let RPosA=[0,0];
+        let RPosB=[100,100];
+        let RDeg = 180/Math.PI*Math.atan2(RPosB[1]-RPosA[1],RPosB[0]-RPosA[0]);
+        let lineR=createLine(RPosA[0],RPosA[1],RPosB[0],RPosB[1],"red",5);
+
+        //G:Click線
+        let GPosA=[RPosA[0],RPosA[1]];
+        let GPosB=[RPosB[0],RPosB[1]];
+        let GDeg = 180/Math.PI*Math.atan2(GPosB[1]-GPosA[1],GPosB[0]-GPosA[0]);
+        let lineG=createLine(GPosA[0],GPosA[1],GPosB[0],GPosB[1],"green",5);
+
+        //B:移動線
+        let BPosA=[RPosA[0],RPosA[1]];
+        let BPosB=[RPosB[0],RPosB[1]];
+        let BDeg = 180/Math.PI*Math.atan2(BPosB[1]-BPosA[1],BPosB[0]-BPosA[0]);
+        let lineB=createLine(BPosA[0],BPosA[1],BPosB[0],BPosB[1],"blue",5);
+
+
+        svg.addEventListener("click",(e)=>{
+          // e事件抓到的座標系是左上(0,0)，順時針
+          x=e.x-width/2;
+          y=e.y-height/2;
+
+          //重畫G
+          GposA=[0,0];
+          GposB=[x,y];
+          GDeg = 180/Math.PI*Math.atan2(GposB[1]-GposA[1],GposB[0]-GposA[0]);
+          updateLine(lineG,GposA[0],GposA[1],GposB[0],GposB[1],"green",5);
+
+
+          //重畫B，回到基準線
+          BPosA=[RPosA[0],RPosA[1]];
+          BPosB=[RPosB[0],RPosB[1]];
+          BDeg = 180/Math.PI*Math.atan2(BPosB[1]-BPosA[1],BPosB[0]-BPosA[0]);
+          updateLine(lineB,BPosA[0],BPosA[1],BPosB[0],BPosB[1],"blue",5);
+        });
+        
+        setInterval(()=>{
+          if(BDeg==GDeg){
+            //已達目標角度
+            return;
+          }
+          if(GDeg-RDeg>0){
+            //順時針
+            BDeg= BDeg+0.1 > GDeg ? GDeg:BDeg+0.1;
+          }else{
+            //逆時針
+            BDeg = BDeg-0.1 < GDeg ? GDeg: BDeg-0.1;
+          }
+
+          let rad=Math.PI/180*(BDeg-RDeg);
+
+          //轉換
+          let trans=[
+            Math.cos(rad) , -Math.sin(rad),
+            Math.sin(rad),  Math.cos(rad)
+          ];
+
+          let newposA=[
+            trans[0]*RPosA[0]+trans[1]*RPosA[1],
+            trans[2]*RPosA[0]+trans[3]*RPosA[1],
+          ]
+
+          let newposB=[
+            trans[0]*RPosB[0]+trans[1]*RPosB[1],
+            trans[2]*RPosB[0]+trans[3]*RPosB[1],
+          ];
+          updateLine(lineB,newposA[0],newposA[1],newposB[0],newposB[1],"blue",5);
+        });
+      }
+      function main2(){
+        let posA=[0,0];
+        let posB=[100,0];
+        createLine(posA[0],posA[1],posB[0],posB[1],"red",5);        
+        let newLine=createLine(posA[0],posA[1],posB[0],posB[1],"green",5);
+
+
+        svg.addEventListener("click",(e)=>{
+          //e事件抓到的座標系是左上(0,0)，順時針
+          x=e.x-width/2;
+          y=e.y-height/2;
+
+          let newposA=[0,0];
+          let newposB=[x,y];
+
+          updateLine(newLine,newposA[0],newposA[1],newposB[0],newposB[1],"green",5);
+        });
+
+      }
+      function main1(){
+        //順時針旋轉
+        let posA=[0,0];
+        let posB=[100,0];
+        createLine(posA[0],posA[1],posB[0],posB[1],"red",5);
+
+        let newLine=createLine(posA[0],posA[1],posB[0],posB[1],"green",5);
+
+        let deg=0;    //角度
+
+        setInterval(()=>{
+          //旋轉，每次多0.1
+          deg=deg+0.1;
+          let rad=Math.PI/180*deg;
+          //轉換
+          let trans=[
+            Math.cos(rad) , -Math.sin(rad),
+            Math.sin(rad),  Math.cos(rad)
+          ];
+
+          let newposA=[
+            trans[0]*posA[0]+trans[1]*posA[1],
+            trans[2]*posA[0]+trans[3]*posA[1],
+          ];
+
+          let newposB=[
+            trans[0]*posB[0]+trans[1]*posB[1],
+            trans[2]*posB[0]+trans[3]*posB[1],
+          ];
+          updateLine(newLine,newposA[0],newposA[1],newposB[0],newposB[1],"green",5);
+        });
+      }
+      // function main1(){
+      //   //旋轉，每次多0.1
+      //   svg.addEventListener("click",(e)=>{
+      //     x=e.x-320;
+      //     y=e.y-240;
+      //   });
+
+      //   let pos=[100,0];//基本線的x、y位置
+      //   let line=drawLine(0,0,100,0,"red",5);
+      //   let newLine=drawLine(0,0,100,0,"green",5);
+
+
+      //   let deg=0;
+      //   setInterval(() => {
+      //     //角度
+      //     deg=deg+0.1;
+      //     //弧度
+      //     let rad=Math.PI/180*deg;
+      //     //轉換
+      //     let trans=[
+      //       Math.cos(rad) , -Math.sin(rad),
+      //       Math.sin(rad),  Math.cos(rad)
+      //     ];
+
+      //     let newpos=[
+      //       trans[0]*pos[0]+trans[1]*pos[1],
+      //       trans[2]*pos[0]+trans[3]*pos[1],
+      //     ]
+      //     drawNewLine(newLine,0,0,newpos[0],newpos[1],"green",5);
+      //   }, 60/1000);
+      // }
+      function canvas(){
+        //直線
+        let i=0;
+        while(i<=width){
+          createLine(i,0,i,height,"#dddddd",1);
+          i=i+10;
+        }        
+        //橫線
+        let j=0;
+        while (j<=height){
+          createLine(0,j,width,j,"#dddddd",1);          
+          j=j+10;
+        }
+
+      }
+      function createLine(x1,y1,x2,y2,color,w){
+        let line=document.createElementNS("http://www.w3.org/2000/svg","line");
+        svg.appendChild(line);
+        updateLine(line,x1,y1,x2,y2,color,w);
+        // let p1=[x1,y1];
+        // let p2=[x2,y2];
+        // let move=[width/2,height/2];
+        // let newP1=[p1[0]+move[0],p1[1]+move[1]];
+        // let newP2=[p2[0]+move[0],p2[1]+move[1]];
+        // let line=document.createElementNS("http://www.w3.org/2000/svg","line");
+        //   line.setAttribute("x1",newP1[0]);
+        //   line.setAttribute("y1",newP1[1]);
+        //   line.setAttribute("x2",newP2[0]);
+        //   line.setAttribute("y2",newP2[1]);
+        //   line.setAttribute("stroke",color);
+        //   line.setAttribute("stroke-width",w);
+        //   svg.appendChild(line);
+        return line;
+      }
+      function updateLine(line,x1,y1,x2,y2,color,w){
+        let p1=[x1,y1];
+        let p2=[x2,y2];
+        let move=[width/2,height/2];
+        let newP1=[p1[0]+move[0],p1[1]+move[1]];
+        let newP2=[p2[0]+move[0],p2[1]+move[1]];
+        line.setAttribute("x1",newP1[0]);
+          line.setAttribute("y1",newP1[1]);
+          line.setAttribute("x2",newP2[0]);
+          line.setAttribute("y2",newP2[1]);
+          line.setAttribute("stroke",color);
+          line.setAttribute("stroke-width",w);                
+      }
+    </script>
+  </head>
+  <body style="margin:0px">
+    <svg id="svg" width="640" height="480" style="border:0px solid #000000;"></svg>
+  </body>
+</html>
