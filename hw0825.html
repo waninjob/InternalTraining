@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      let svg;
+      let width;
+      let height;
+      window.onload=function(){
+        svg=document.getElementById("svg");
+        width=svg.getAttribute("width");
+        height=svg.getAttribute("height");
+        canvas();
+        main();
+        // main2()//從原點到click處畫一條直線
+        // main1();//每一frame 順時針旋轉
+      } 
+      function main(){
+        //R:基準線
+        let P1=[-50,-80];
+        let P2=[300,60];
+        let P3=[90,180];
+
+        createLine(P1[0],P1[1],P2[0],P2[1],"red",5);
+        createLine(P2[0],P2[1],P3[0],P3[1],"green",5);
+        createLine(P1[0],P1[1],P3[0],P3[1],"blue",5);
+
+
+
+        svg.addEventListener("click",(e)=>{
+          x=e.x-width/2;
+          y=e.y-height/2;	
+          let P=[x,y];
+
+
+
+
+        vP1P2=[P2[0]-P1[0],P2[1]-P1[1]];
+        vP1P=[P[0]-P1[0],P[1]-P1[1]];
+
+        vP2P3=[P3[0]-P2[0],P3[1]-P2[1]];
+        vP2P=[P[0]-P2[0],P[1]-P2[1]];
+
+        vP3P1=[P1[0]-P3[0],P1[1]-P3[1]];
+        vP3P=[P[0]-P3[0],P[1]-P3[1]];
+        
+         //console.error("R="+getArea(vP1P2,vP1P));
+         //console.error("G="+getArea(vP2P3,vP2P));
+         //console.error("B="+getArea(vP3P1,vP3P));
+            console.error(getArea(vP1P2,vP1P)&&getArea(vP2P3,vP2P)&&getArea(vP3P1,vP3P));
+        });
+        
+      }
+      function getArea(v1,v2){
+         return (v1[0]*v2[1]-v1[1]*v2[0]) > 0;	//>0 Green is in Red Right
+      }
+      function getPosAfterRotate(PosA,PosB,deg){
+          let rad=Math.PI/180*(deg);
+          console.error("deg="+deg+",rad=="+rad);
+
+          //轉換
+          let trans=[
+            Math.cos(rad) , -Math.sin(rad),
+            Math.sin(rad),  Math.cos(rad)
+          ];
+          
+          let newposA=[
+            trans[0]*PosA[0]+trans[1]*PosA[1],
+            trans[2]*PosA[0]+trans[3]*PosA[1],
+          ]
+
+          let newposB=[
+            trans[0]*PosB[0]+trans[1]*PosB[1],
+            trans[2]*PosB[0]+trans[3]*PosB[1],
+          ];
+
+          return [newposA,newposB];
+      }
+      function main2(){
+        let posA=[0,0];
+        let posB=[100,0];
+        createLine(posA[0],posA[1],posB[0],posB[1],"red",5);        
+        let newLine=createLine(posA[0],posA[1],posB[0],posB[1],"green",5);
+
+
+        svg.addEventListener("click",(e)=>{
+          //e事件抓到的座標系是左上(0,0)，順時針
+          x=e.x-width/2;
+          y=e.y-height/2;
+
+          let newposA=[0,0];
+          let newposB=[x,y];
+
+          updateLine(newLine,newposA[0],newposA[1],newposB[0],newposB[1],"green",5);
+        });
+
+      }
+      function main1(){
+        //順時針旋轉
+        let posA=[0,0];
+        let posB=[100,0];
+        createLine(posA[0],posA[1],posB[0],posB[1],"red",5);
+
+        let newLine=createLine(posA[0],posA[1],posB[0],posB[1],"green",5);
+
+        let deg=0;    //角度
+
+        setInterval(()=>{
+          //旋轉，每次多0.1
+          deg=deg+0.1;
+          let rad=Math.PI/180*deg;
+          //轉換
+          let trans=[
+            Math.cos(rad) , -Math.sin(rad),
+            Math.sin(rad),  Math.cos(rad)
+          ];
+
+          let newposA=[
+            trans[0]*posA[0]+trans[1]*posA[1],
+            trans[2]*posA[0]+trans[3]*posA[1],
+          ];
+
+          let newposB=[
+            trans[0]*posB[0]+trans[1]*posB[1],
+            trans[2]*posB[0]+trans[3]*posB[1],
+          ];
+          updateLine(newLine,newposA[0],newposA[1],newposB[0],newposB[1],"green",5);
+        });
+      }
+      // function main1(){
+      //   //旋轉，每次多0.1
+      //   svg.addEventListener("click",(e)=>{
+      //     x=e.x-320;
+      //     y=e.y-240;
+      //   });
+
+      //   let pos=[100,0];//基本線的x、y位置
+      //   let line=drawLine(0,0,100,0,"red",5);
+      //   let newLine=drawLine(0,0,100,0,"green",5);
+
+
+      //   let deg=0;
+      //   setInterval(() => {
+      //     //角度
+      //     deg=deg+0.1;
+      //     //弧度
+      //     let rad=Math.PI/180*deg;
+      //     //轉換
+      //     let trans=[
+      //       Math.cos(rad) , -Math.sin(rad),
+      //       Math.sin(rad),  Math.cos(rad)
+      //     ];
+
+      //     let newpos=[
+      //       trans[0]*pos[0]+trans[1]*pos[1],
+      //       trans[2]*pos[0]+trans[3]*pos[1],
+      //     ]
+      //     drawNewLine(newLine,0,0,newpos[0],newpos[1],"green",5);
+      //   }, 60/1000);
+      // }
+      function canvas(){
+        //直線
+        let i=0;
+        while(i<=width){
+          createLine(i,0,i,height,"#dddddd",1);
+          i=i+10;
+        }        
+        //橫線
+        let j=0;
+        while (j<=height){
+          createLine(0,j,width,j,"#dddddd",1);          
+          j=j+10;
+        }
+
+      }
+      function createLine(x1,y1,x2,y2,color,w){
+        let line=document.createElementNS("http://www.w3.org/2000/svg","line");
+        svg.appendChild(line);
+        updateLine(line,x1,y1,x2,y2,color,w);
+        // let p1=[x1,y1];
+        // let p2=[x2,y2];
+        // let move=[width/2,height/2];
+        // let newP1=[p1[0]+move[0],p1[1]+move[1]];
+        // let newP2=[p2[0]+move[0],p2[1]+move[1]];
+        // let line=document.createElementNS("http://www.w3.org/2000/svg","line");
+        //   line.setAttribute("x1",newP1[0]);
+        //   line.setAttribute("y1",newP1[1]);
+        //   line.setAttribute("x2",newP2[0]);
+        //   line.setAttribute("y2",newP2[1]);
+        //   line.setAttribute("stroke",color);
+        //   line.setAttribute("stroke-width",w);
+        //   svg.appendChild(line);
+        return line;
+      }
+      function updateLine(line,x1,y1,x2,y2,color,w){
+        let p1=[x1,y1];
+        let p2=[x2,y2];
+        let move=[width/2,height/2];
+        let newP1=[p1[0]+move[0],p1[1]+move[1]];
+        let newP2=[p2[0]+move[0],p2[1]+move[1]];
+        line.setAttribute("x1",newP1[0]);
+          line.setAttribute("y1",newP1[1]);
+          line.setAttribute("x2",newP2[0]);
+          line.setAttribute("y2",newP2[1]);
+          line.setAttribute("stroke",color);
+          line.setAttribute("stroke-width",w);                
+      }
+    </script>
+  </head>
+  <body style="margin:0px">
+    <svg id="svg" width="640" height="480" style="border:0px solid #000000;"></svg>
+  </body>
+</html>
