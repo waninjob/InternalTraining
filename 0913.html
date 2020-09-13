@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      let svg;
+      let width;
+      let height;
+      window.onload=function(){          
+        svg=document.getElementById("svg");
+        width=svg.getAttribute("width");
+        height=svg.getAttribute("height");
+        canvas();
+        main();
+      } 
+      function main(){
+        let centerX=100;//圓心X位置
+        let centerY=100;//圓心Y位置
+        let radius=100;//半徑
+        let degree=50;//Pie的角度(90為4分之一圓餅圖)
+        let rotation=0;//圓餅圖旋轉角度
+        let tmp=createPie(centerX,centerY,radius,degree,rotation);
+        let pine=tmp[0];
+        let vector=tmp[1];
+
+
+        let mouseVector=[centerX,centerY];
+        svg.addEventListener("mousemove",(e)=>{
+          //e事件抓到的座標系是左上(0,0)，順時針
+          x=e.x-width/2;
+          y=e.y-height/2;
+          mouseVector=[x-centerX,y-centerY];
+        });
+
+        setInterval(() => {
+          let vector1=vector[0];
+          let vector2=vector[1];
+          let mouseRadius=Math.sqrt(mouseVector[0]*mouseVector[0]+mouseVector[1]*mouseVector[1]);
+
+          if(degree<180){
+            touch=getArea(vector1,mouseVector) && !getArea(vector2,mouseVector);
+          }else{
+            touch=!(!getArea(vector1,mouseVector) && getArea(vector2,mouseVector));
+          }
+          if(touch && mouseRadius<radius){
+            return;
+          }
+          rotation=(rotation+1)%360;
+          vector=updatePine(pine,centerX,centerY,radius,degree,rotation);
+        });
+      }
+      function getArea(v1,v2){
+         return (v1[0]*v2[1]-v1[1]*v2[0]) > 0;	//>0 v2在v1的右方
+      }
+
+      function canvas(){
+        //直線
+        let i=0;
+        while(i<=width){
+          createLine(i,0,i,height,"#dddddd",1);
+          i=i+10;
+        }        
+        //橫線
+        let j=0;
+        while (j<=height){
+          createLine(0,j,width,j,"#dddddd",1);          
+          j=j+10;
+        }
+
+      }
+      function createLine(x1,y1,x2,y2,color,w){
+        let line=document.createElementNS("http://www.w3.org/2000/svg","line");
+        svg.appendChild(line);
+        updateLine(line,x1,y1,x2,y2,color,w);
+        return line;
+      }
+      function updateLine(line,x1,y1,x2,y2,color,w){
+        let p1=[x1,y1];
+        let p2=[x2,y2];
+        let move=[width/2,height/2];
+        let newP1=[p1[0]+move[0],p1[1]+move[1]];
+        let newP2=[p2[0]+move[0],p2[1]+move[1]];
+        line.setAttribute("x1",newP1[0]);
+          line.setAttribute("y1",newP1[1]);
+          line.setAttribute("x2",newP2[0]);
+          line.setAttribute("y2",newP2[1]);
+          line.setAttribute("stroke",color);
+          line.setAttribute("stroke-width",w);                
+      }
+
+
+      /*
+      centerX:圓心X位置
+      centerY:圓心Y位置
+      radius:半徑
+      degree:Pie的角度(90為4分之一圓餅圖)
+      rotation:圓餅圖旋轉角度
+      */
+      function createPie(centerX,centerY,radius,degree,rotation){
+        let fan=document.createElementNS("http://www.w3.org/2000/svg","path");
+        svg.appendChild(fan,centerX,centerY,radius,degree,rotation);
+        let vectors=updatePine(fan,centerX,centerY,radius,degree,rotation);
+        return [fan,vectors];
+      }
+      function updatePine(fan,centerX,centerY,radius,degree,rotation){
+        let rad=Math.PI/180*degree;//弧度
+        let moveX=centerX;
+        let moveY=centerY;
+        let lineX=moveX+radius;
+        let lineY=moveY;
+        let A0=radius;
+        let A1=radius;
+        let A2=0;//x-axis-rotation=弧線與x軸的旋轉角度
+        let A3=degree>180?1:0;//large-arc-flag:(1=最大角度的弧線;0=最小角度的弧線)
+        let A4=1;//sweep-flag:方向(1=順時針方向;0=逆時針方向)
+        let A5=centerX+radius*Math.cos(rad);
+        let A6=centerY+radius*Math.sin(rad);
+        // let cmd="M "+moveX+" "+moveY+",L"+lineX+" "+lineY+",A"+A0+" "+A1+" "+A2+" "+A3+" "+A4+" "+A5+" "+A6+",Z";//左上0,0繪圖座標系
+        // let cmd="M "+(moveX+width/2)+" "+(moveY+height/2)+",L"+(lineX+width/2)+" "+(lineY+height/2)+",A"+A0+" "+A1+" "+A2+" "+A3+" "+A4+" "+(A5+width/2)+" "+(A6+height/2)+",Z";
+        let tmpCenterP=rotatePoint(moveX-centerX,moveY-centerY,rotation);
+        let tmpLineP=rotatePoint(lineX-centerX,lineY-centerY,rotation);
+        let tmpEendP=rotatePoint(A5-centerX,A6-centerY,rotation);
+
+        let centerP=movePoint(tmpCenterP[0],tmpCenterP[1],width/2+centerX,height/2+centerY);
+        let lineP=movePoint(tmpLineP[0],tmpLineP[1],width/2+centerX,height/2+centerY);
+        let endP=movePoint(tmpEendP[0],tmpEendP[1],width/2+centerX,height/2+centerY);
+
+        let cmd="M "+centerP[0]+" "+centerP[1]+",L"+lineP[0]+" "+lineP[1]+",A"+A0+" "+A1+" "+A2+" "+A3+" "+A4+" "+endP[0]+" "+endP[1]+",Z";
+        fan.setAttribute("d",cmd);
+        fan.setAttribute("fill","#fa0");
+
+        return [tmpLineP,tmpEendP];
+      }
+
+      function movePoint(x,y,moveX,moveY){
+        return [x+moveX,y+moveY];        
+      }
+      function rotatePoint(x,y,deg){
+        let rad=Math.PI/180*deg;
+        let newX=Math.cos(rad)*x-Math.sin(rad)*y;
+        let newY=Math.sin(rad)*x+Math.cos(rad)*y;
+        return [newX,newY];
+      }
+    </script>
+  </head>
+  <body style="margin:0px">
+    <svg id="svg" width="640" height="480" style="border:0px solid #000000;">
+        <!-- <path d="M100 100,L100 50,A50 50 0 0 1 140 100,Z" fill="#fa0"/> -->
+    </svg>
+    
+  </body>
+</html>
